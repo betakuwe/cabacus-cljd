@@ -1,0 +1,61 @@
+(ns main
+  (:require ["package:flutter/material.dart" :as m]
+            ["package:flutter/services.dart" :as s]
+            ["dart:core" :as dc]
+            [cljd.flutter :as f]))
+
+(defn make-landscape []
+  (m/WidgetsFlutterBinding.ensureInitialized)
+  (s/SystemChrome.setPreferredOrientations
+    [s/DeviceOrientation.landscapeLeft s/DeviceOrientation.landscapeRight])
+  (s/SystemChrome.setSystemUIOverlayStyle
+    (s/SystemUiOverlayStyle .systemNavigationBarColor m/Colors.transparent)))
+
+(def bead-height 48.0)
+(def bead-width 80.0)
+(def rod-width 10.0)
+(def bead-animation-duration (dc/Duration .milliseconds 300))
+
+(def bead
+  (f/widget
+    :width bead-width
+    :height bead-height
+    (m/Container .margin (m/EdgeInsets.symmetric .horizontal 1.0))
+    .decoration (m/ShapeDecoration .color m/Colors.amber)
+    .shape (m/BeveledRectangleBorder .side (m/BorderSide .color m/Colors.red))
+    .borderRadius (m/BorderRadius.all
+                    (m/Radius.circular (dec (quot bead-height 2))))))
+
+(defn rod-stick [.child]
+  (f/widget
+    (m/Stack .alignment m/Alignment.topCenter .clipBehavior m/Clip.antiAlias)
+    .children [(m/Container
+                 .width rod-width
+                 .decoration (m/BoxDecoration .color m/Colors.black))
+               child]))
+
+(defn upper-rod [background digit]
+  (f/widget
+    :width bead-width
+    :height (* 1.5 bead-height)
+    (m/Container .decoration background .clipBehavior m/Clip.antiAlias)
+    rod-stick
+    (m/AnimatedAlign
+      .alignment (if (< digit 5) m/Alignment.topCenter m/Alignment.bottomCenter)
+      .duration bead-animation-duration
+      .curve m/Curves.easeInOutBack)
+    bead))
+
+(defn main
+  []
+  (make-landscape)
+  (f/run
+    (m/MaterialApp
+      .title "CABACUS"
+      .theme (m/ThemeData .primarySwatch m/Colors.pink))
+    .home (m/Scaffold
+             .appBar (m/AppBar .title (m/Text "Welcome to ClojureDart")))
+    .body m/Column
+    .children [bead bead (f/widget rod-stick bead)]))
+;; (upper-rod 0 0 0)
+
