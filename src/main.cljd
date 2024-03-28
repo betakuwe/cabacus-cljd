@@ -44,7 +44,7 @@
 
 (def digit-state (atom 0))
 
-(def upper-rod
+(def upper-bead
   (f/widget
     :width bead-width
     :height (* 1.5 bead-height)
@@ -71,5 +71,5 @@
     (m/Scaffold
       .appBar (m/AppBar .title (m/Text (str "Current digit: " digit))))
     .body m/Column
-    .children [upper-rod]))
+    .children [upper-bead]))
 ;; (upper-rod 0 0 0)
