@@ -15,6 +15,14 @@
 (def bead-width 80.0)
 (def rod-width 10.0)
 (def bead-animation-duration (dc/Duration .milliseconds 300))
+(def seed-color (m/Colors.amber))
+(def color-scheme (m/ColorScheme.fromSeed .seedColor seed-color))
+(def bead-background-color (.-surfaceVariant ^m/ColorScheme color-scheme))
+(def bead-background (m/BoxDecoration
+                       .color bead-background-color
+                       .border (m/Border.all
+                                 .color bead-background-color
+                                 .width 0)))
 
 (def bead
   (f/widget
@@ -34,16 +42,21 @@
                  .decoration (m/BoxDecoration .color m/Colors.black))
                child]))
 
-(defn upper-rod [background digit]
+(def digit-state (atom 0))
+
+(def upper-rod
   (f/widget
     :width bead-width
     :height (* 1.5 bead-height)
-    (m/Container .decoration background .clipBehavior m/Clip.antiAlias)
+    (m/Container .decoration bead-background .clipBehavior m/Clip.antiAlias)
     rod-stick
+    :watch [digit digit-state]
     (m/AnimatedAlign
       .alignment (if (< digit 5) m/Alignment.topCenter m/Alignment.bottomCenter)
       .duration bead-animation-duration
       .curve m/Curves.easeInOutBack)
+    (m/GestureDetector
+      .onTapDown (fn [_] (swap! digit-state #((if (< % 5) + -) % 5))))
     bead))
 
 (defn main
@@ -53,9 +66,10 @@
     (m/MaterialApp
       .title "CABACUS"
       .theme (m/ThemeData .primarySwatch m/Colors.pink))
-    .home (m/Scaffold
-             .appBar (m/AppBar .title (m/Text "Welcome to ClojureDart")))
+    .home
+    :watch [digit digit-state]
+    (m/Scaffold
+      .appBar (m/AppBar .title (m/Text (str "Current digit: " digit))))
     .body m/Column
-    .children [bead bead (f/widget rod-stick bead)]))
+    .children [upper-rod]))
 ;; (upper-rod 0 0 0)
-
