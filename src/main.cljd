@@ -12,9 +12,9 @@
   (s/SystemChrome.setSystemUIOverlayStyle
     (s/SystemUiOverlayStyle .systemNavigationBarColor m/Colors.transparent)))
 
-(def bead-height 48.0)
-(def bead-width 80.0)
-(def rod-width 10.0)
+(def bead-height 48)
+(def bead-width 80)
+(def rod-width 10)
 (def bead-animation-duration (dc/Duration .milliseconds 300))
 (def seed-color (m/Colors.amber))
 (def color-scheme (m/ColorScheme.fromSeed .seedColor seed-color))
