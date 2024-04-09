@@ -44,23 +44,28 @@
                  .decoration (m/BoxDecoration .color m/Colors.black))
                child]))
 
-(def digit-state (atom 0))
+(def !digits (atom (vector 0 0 0)))
 
-(defn upper-rod []
+(defn upper-rod [digit-index]
   (f/widget
     :width bead-width
     :height (* 1.5 bead-height)
     rod-stick
-    :watch [digit digit-state]
+    :watch [digits !digits]
     (m/AnimatedAlign
-      .alignment (if (< digit 5) m/Alignment.topCenter m/Alignment.bottomCenter)
+      .alignment (if (< (digits digit-index) 5)
+                   m/Alignment.topCenter
+                   m/Alignment.bottomCenter)
       .duration bead-animation-duration
       .curve m/Curves.easeInOutBack)
     (m/GestureDetector
-      .onTapDown (fn [_] (swap! digit-state #((if (< % 5) + -) % 5))))
+      .onTapDown (fn [_] (swap! !digits
+                                update
+                                digit-index
+                                #((if (< % 5) + -) % 5))))
     bead))
 
-(defn lower-rod []
+(defn lower-rod [digit-index]
   (f/widget
     :width bead-width
     :height (* 4.5 bead-height)
@@ -68,20 +73,29 @@
     (m/Column .mainAxisAlignment m/MainAxisAlignment.end)
     .children
     (->> (range 4)
-         (map (fn [i]
+         (map (fn [bead-index]
                 (f/widget
-                  :watch [digit digit-state]
+                  :watch [digits !digits]
                   (m/AnimatedSlide
-                    .offset (ui/Offset 0 (if (< i (mod digit 5)) -0.5 0))
+                    .offset (ui/Offset 0 (if (< bead-index
+                                                (mod (digits digit-index) 5))
+                                           -0.5
+                                           0))
                     .duration bead-animation-duration
                     .curve m/Curves.easeInOutBack)
                   (m/GestureDetector
-                    .onTapDown (fn [_]
-                                 (swap! digit-state
-                                        #(+ i
-                                            (if (< % 5) 0 5)
-                                            (if (<= (mod % 5) i) 1 0)))))
+                    .onTapDown
+                    (fn [_]
+                      (swap! !digits
+                             update
+                             digit-index
+                             #(+ bead-index
+                                 (if (< % 5) 0 5)
+                                 (if (<= (mod % 5) bead-index) 1 0)))))
                   bead))))))
+
+(defn rod [digit-index]
+  (m/Column .children [(upper-rod digit-index) (lower-rod digit-index)]))
 
 (defn main
   []
@@ -91,8 +105,11 @@
       .title "CABACUS"
       .theme (m/ThemeData .primarySwatch m/Colors.pink))
     .home
-    :watch [digit digit-state]
+    :watch [digit !digit
+            digits !digits]
     (m/Scaffold
-      .appBar (m/AppBar .title (m/Text (str "Current digit: " digit))))
-    .body m/Column
-    .children [(upper-rod) (lower-rod)]))
+      .appBar (m/AppBar .title (m/Text (apply str "Current digit: " digits))))
+    .body
+    (m/Row .mainAxisSize m/MainAxisSize.min)
+    .children
+    [(rod 0) (rod 1) (rod 2)]))
