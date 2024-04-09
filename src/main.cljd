@@ -44,7 +44,9 @@
                  .decoration (m/BoxDecoration .color m/Colors.black))
                child]))
 
-(def !digits (atom (vector 0 0 0)))
+(def num-digits 4)
+
+(def !digits (atom (vec (repeat num-digits 0))))
 
 (defn upper-rod [digit-index]
   (f/widget
@@ -105,11 +107,10 @@
       .title "CABACUS"
       .theme (m/ThemeData .primarySwatch m/Colors.pink))
     .home
-    :watch [digit !digit
-            digits !digits]
+    :watch [digits !digits]
     (m/Scaffold
       .appBar (m/AppBar .title (m/Text (apply str "Current digit: " digits))))
     .body
     (m/Row .mainAxisSize m/MainAxisSize.min)
     .children
-    [(rod 0) (rod 1) (rod 2)]))
+    (map rod (range num-digits))))
