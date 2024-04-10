@@ -8,109 +8,127 @@
 (defn make-landscape []
   (m/WidgetsFlutterBinding.ensureInitialized)
   (s/SystemChrome.setPreferredOrientations
-    [s/DeviceOrientation.landscapeLeft s/DeviceOrientation.landscapeRight])
+   [s/DeviceOrientation.landscapeLeft s/DeviceOrientation.landscapeRight])
   (s/SystemChrome.setSystemUIOverlayStyle
-    (s/SystemUiOverlayStyle .systemNavigationBarColor m/Colors.transparent)))
+   (s/SystemUiOverlayStyle .systemNavigationBarColor m/Colors.transparent)))
 
 (def bead-height 48)
 (def bead-width 80)
 (def rod-width 10)
+(def frame-width 4)
 (def bead-animation-duration (dc/Duration .milliseconds 300))
 (def seed-color (m/Colors.amber))
 (def color-scheme (m/ColorScheme.fromSeed .seedColor seed-color))
 (def bead-background-color (.-surfaceVariant ^m/ColorScheme color-scheme))
 (def bead-background (m/BoxDecoration
-                       .color bead-background-color
-                       .border (m/Border.all
-                                 .color bead-background-color
-                                 .width 0)))
+                      .color bead-background-color
+                      .border (m/Border.all
+                               .color bead-background-color
+                               .width 0)))
 
-(def bead
-  (f/widget
-    :width bead-width
-    :height bead-height
-    (m/Container .margin (m/EdgeInsets.symmetric .horizontal 1.0))
-    .decoration (m/ShapeDecoration .color m/Colors.amber)
-    .shape (m/BeveledRectangleBorder .side (m/BorderSide .color m/Colors.red))
-    .borderRadius (m/BorderRadius.all
-                    (m/Radius.circular (dec (quot bead-height 2))))))
-
-(defn rod-stick [.child]
-  (f/widget
-    (m/Container .decoration bead-background .clipBehavior m/Clip.antiAlias)
-    (m/Stack .alignment m/Alignment.topCenter .clipBehavior m/Clip.antiAlias)
-    .children [(m/Container
-                 .width rod-width
-                 .decoration (m/BoxDecoration .color m/Colors.black))
-               child]))
+(def frame-color (.-onSecondaryContainer  ^m/ColorScheme color-scheme))
+(def frame-decoration
+  (m/BoxDecoration
+   .color frame-color
+   .border (m/Border.all .color frame-color)
+   .borderRadius (m/BorderRadius.all (m/Radius.circular 5))))
 
 (def num-digits 4)
 
 (def !digits (atom (vec (repeat num-digits 0))))
 
+(def bead
+  (f/widget
+   :width bead-width
+   :height bead-height
+   (m/Container .margin (m/EdgeInsets.symmetric .horizontal 1.0))
+   .decoration (m/ShapeDecoration .color m/Colors.amber)
+   .shape (m/BeveledRectangleBorder .side (m/BorderSide .color m/Colors.red))
+   .borderRadius (m/BorderRadius.all
+                  (m/Radius.circular (dec (quot bead-height 2))))))
+
+(defn rod-stick [.child]
+  (f/widget
+   (m/Container .decoration bead-background .clipBehavior m/Clip.antiAlias)
+   (m/Stack .alignment m/Alignment.topCenter .clipBehavior m/Clip.antiAlias)
+   .children [(m/Container .width rod-width
+                           .decoration (m/BoxDecoration .color m/Colors.black))
+              child]))
+
 (defn upper-rod [digit-index]
   (f/widget
-    :width bead-width
-    :height (* 1.5 bead-height)
-    rod-stick
-    :watch [digits !digits]
-    (m/AnimatedAlign
-      .alignment (if (< (digits digit-index) 5)
-                   m/Alignment.topCenter
-                   m/Alignment.bottomCenter)
-      .duration bead-animation-duration
-      .curve m/Curves.easeInOutBack)
-    (m/GestureDetector
-      .onTapDown (fn [_] (swap! !digits
-                                update
-                                digit-index
-                                #((if (< % 5) + -) % 5))))
-    bead))
+   :width bead-width
+   :height (* 1.5 bead-height)
+   rod-stick
+   :watch [digits !digits]
+   (m/AnimatedAlign .alignment (if (< (digits digit-index) 5)
+                                 m/Alignment.topCenter
+                                 m/Alignment.bottomCenter)
+                    .duration bead-animation-duration
+                    .curve m/Curves.easeInOutBack)
+   (m/GestureDetector .onTapDown (fn [_] (swap! !digits
+                                                update
+                                                digit-index
+                                                #((if (< % 5) + -) % 5))))
+   bead))
 
 (defn lower-rod [digit-index]
   (f/widget
-    :width bead-width
-    :height (* 4.5 bead-height)
-    rod-stick
-    (m/Column .mainAxisAlignment m/MainAxisAlignment.end)
-    .children
-    (->> (range 4)
-         (map (fn [bead-index]
-                (f/widget
-                  :watch [digits !digits]
-                  (m/AnimatedSlide
-                    .offset (ui/Offset 0 (if (< bead-index
-                                                (mod (digits digit-index) 5))
-                                           -0.5
-                                           0))
-                    .duration bead-animation-duration
-                    .curve m/Curves.easeInOutBack)
-                  (m/GestureDetector
-                    .onTapDown
-                    (fn [_]
-                      (swap! !digits
-                             update
-                             digit-index
-                             #(+ bead-index
-                                 (if (< % 5) 0 5)
-                                 (if (<= (mod % 5) bead-index) 1 0)))))
-                  bead))))))
+   :width bead-width
+   :height (* 4.5 bead-height)
+   rod-stick
+   (m/Column .mainAxisAlignment m/MainAxisAlignment.end)
+   .children
+   (map (fn [bead-index]
+          (f/widget
+           :watch [digits !digits]
+           (m/AnimatedSlide
+            .offset (ui/Offset 0
+                               (if (< bead-index (mod (digits digit-index) 5))
+                                 -0.5
+                                 0))
+            .duration bead-animation-duration
+            .curve m/Curves.easeInOutBack)
+           (m/GestureDetector
+            .onTapDown (fn [_]
+                         (swap! !digits
+                                update
+                                digit-index
+                                #(+ bead-index
+                                    (if (< % 5) 0 5)
+                                    (if (<= (mod % 5) bead-index) 1 0)))))
+           bead))
+        (range 4))))
 
-(defn rod [digit-index]
-  (m/Column .children [(upper-rod digit-index) (lower-rod digit-index)]))
+(defn dot-beam [digit-index]
+  (f/widget (m/SizedBox .width bead-width .height frame-width)
+            :when (zero? (mod (- num-digits digit-index) 3))
+            m/Center
+            (m/Container .height 2 .width 2 .color m/Colors.white)))
+
+(def abacus
+  (f/widget
+   (m/Container .padding (m/EdgeInsets.all frame-width)
+                .decoration frame-decoration
+                .clipBehavior m/Clip.antiAlias)
+   (m/Row .mainAxisSize m/MainAxisSize.min)
+   .children
+   (map (fn [digit-index]
+          (m/Column .mainAxisSize m/MainAxisSize.min
+                    .children
+                    (map #(% digit-index) [upper-rod dot-beam lower-rod])))
+        (range num-digits))))
 
 (defn main
   []
   ;(make-landscape)
   (f/run
-    (m/MaterialApp
-      .title "CABACUS"
-      .theme (m/ThemeData .primarySwatch m/Colors.pink))
-    .home
-    :watch [digits !digits]
-    (m/Scaffold
-      .appBar (m/AppBar .title (m/Text (apply str "Current digit: " digits))))
-    .body
-    (m/Row .mainAxisSize m/MainAxisSize.min)
-    .children
-    (map rod (range num-digits))))
+   (m/MaterialApp
+    .title "CABACUS"
+    .theme (m/ThemeData .primarySwatch m/Colors.pink))
+   .home
+   :watch [digits !digits]
+   (m/Scaffold
+    .appBar (m/AppBar .title (m/Text (apply str "Current value: " digits))))
+   .body
+   abacus))
