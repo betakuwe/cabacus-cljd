@@ -48,3 +48,4 @@ app.*.map.json
 lib/cljd-out/
 test/cljd-out/
 /.clj-kondo/.cache/
+/.clj-kondo/.cache/
