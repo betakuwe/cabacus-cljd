@@ -1,6 +1,16 @@
 # cljd_cabacus_cljd
 
-A new Flutter project.
+Cabacus app in cljd
+
+## Features
+
+* Abacus frame and beads
+* Responsive beads that relflect their values
+* Numerical display of abacus values
+
+## TODO
+
+- [] Top bar with buttons
 
 ## Getting Started
 
