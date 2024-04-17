@@ -14,12 +14,14 @@
 (defn set-num-digits!
   "Pads left of !digits with 0 if extend, drops from left if reduce."
   [num-digits]
-  (let [extra-digits (- num-digits (count @!digits))]
+  (let [curr-num-digits (count @!digits)]
     (cond
-      (pos? extra-digits)
-      (swap! !digits #(vec (concat (repeat extra-digits 0) %)))
+      (> num-digits curr-num-digits)
+      (swap! !digits
+             #(vec (concat (repeat (- num-digits curr-num-digits) 0) %)))
 
-      (neg? extra-digits) (swap! !digits #(vec (drop (- extra-digits) %))))))
+      (< num-digits curr-num-digits)
+      (swap! !digits #(vec (drop (- curr-num-digits num-digits) %))))))
 
 (def bead
   (f/widget
