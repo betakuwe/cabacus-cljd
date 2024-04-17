@@ -1,0 +1,30 @@
+(ns design
+  (:require ["package:flutter/material.dart" :as m]
+            ["dart:core" :as dc]))
+
+(def bead-height 48)
+(def bead-width 80)
+(def rod-width 10)
+(def frame-width 4)
+(def bead-animation-duration (dc/Duration .milliseconds 300))
+
+(def seed-color (m/Colors.amber))
+(def color-scheme (m/ColorScheme.fromSeed .seedColor seed-color))
+
+(def bead-background-color (.-surfaceVariant ^m/ColorScheme color-scheme))
+(def bead-background (m/BoxDecoration
+                      .color bead-background-color
+                      .border (m/Border.all
+                               .color bead-background-color
+                               .width 0)))
+
+(def frame-color (.-onSecondaryContainer  ^m/ColorScheme color-scheme))
+(def frame-decoration
+  (m/BoxDecoration
+   .color frame-color
+   .border (m/Border.all .color frame-color)
+   .borderRadius (m/BorderRadius.all (m/Radius.circular 5))))
+
+(def icon-color (.-primary ^m/ColorScheme color-scheme))
+
+(def home-background-color (.-secondaryContainer ^m/ColorScheme color-scheme))

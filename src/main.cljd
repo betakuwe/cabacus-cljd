@@ -55,6 +55,4 @@
    m/SafeArea
    (m/Column .mainAxisAlignment m/MainAxisAlignment.center
              .mainAxisSize m/MainAxisSize.min)
-   .children
-   [above-abacus
-    abacus/abacus]))
+   .children [above-abacus abacus/abacus]))
