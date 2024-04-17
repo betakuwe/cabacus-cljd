@@ -2,24 +2,52 @@
   (:require ["package:flutter/material.dart" :as m]
             ["package:flutter/services.dart" :as s]
             [cljd.flutter :as f]
+            ["dart:core" :as dc]
             [abacus]
             [design]))
 
-(defn main []
+(def digit-display
+  (f/widget
+   :get {{{:flds [titleMedium]} .-textTheme} m/Theme}
+   :watch [digits abacus/!digits]
+   (m/Text (apply str "Current value: " digits) .style titleMedium)))
 
-  ;; Make app landscape
+(def reset
+  (f/widget
+   (m/TextButton
+    .onPressed (fn [] (swap! abacus/!digits #(vec (repeat (count %) 0)))))
+   :get {{{:flds [titleLarge]} .-textTheme} m/Theme}
+   (m/Text "🅲🅰🅱🅰🅲🆄🆂" .style (.copyWith titleLarge .color design/icon-color))))
+
+(def settings
+  (m/IconButton .onPressed #() ; show dialog
+                .icon (m/Icon m/Icons.settings)))
+
+(def colors
+  (m/IconButton .onPressed #() ; show dialog
+                .icon (m/Icon m/Icons.palette_rounded)))
+(def above-abacus
+  (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween
+         .children [reset digit-display (m/Row .children [colors settings])]))
+
+(defn main []
+  ;; Needs to be initialized before below settings
   (m/WidgetsFlutterBinding.ensureInitialized)
+  ;; Set landscape
   (s/SystemChrome.setPreferredOrientations
    [s/DeviceOrientation.landscapeLeft s/DeviceOrientation.landscapeRight])
+  ;; Makes system overlay transparent
   (s/SystemChrome.setSystemUIOverlayStyle
    (s/SystemUiOverlayStyle .systemNavigationBarColor m/Colors.transparent))
+  ;; Hides the top system bar
+  (s/SystemChrome.setEnabledSystemUIMode s/SystemUiMode.immersiveSticky)
 
-  ;; Homepage
   (f/run
    (m/MaterialApp
     .title "CABACUS"
     .theme (m/ThemeData .colorScheme design/color-scheme
                         .iconTheme (m/IconThemeData .color design/icon-color)
+                        .textTheme nil
                         .splashFactory m/NoSplash.splashFactory
                         .useMaterial3 true))
    .home (m/Container .alignment m/Alignment.center
@@ -27,14 +55,6 @@
    m/SafeArea
    (m/Column .mainAxisAlignment m/MainAxisAlignment.center
              .mainAxisSize m/MainAxisSize.min)
-   .children [abacus/abacus]
-; (m/MaterialApp
-   ;  .title "CABACUS"
-   ;  .theme (m/ThemeData .primarySwatch m/Colors.pink))
-   ; .home
-   ; :watch [digits abacus/!digits]
-   ; (m/Scaffold
-   ;  .appBar (m/AppBar .title (m/Text (apply str "Current value: " digits))))
-   ; .body
-   ; abacus/abacus
-   ))
+   .children
+   [above-abacus
+    abacus/abacus]))
