@@ -36,9 +36,37 @@
    (m/Text "🅲🅰🅱🅰🅲🆄🆂"
            .style (.copyWith titleLarge .color (design/text-color color)))))
 
-(def settings
-  (m/IconButton .onPressed #() ; show dialog
-                .icon (m/Icon m/Icons.settings)))
+(def !reset-position (atom :left))
+
+(def settings-button
+  (f/widget
+   :context ctx
+   (m/IconButton
+    .onPressed
+    (fn [] (m/showDialog
+            .context ctx
+            .builder
+            (f/build
+             (m/AlertDialog .title (m/Text "Settings"))
+             .content
+             (m/Column .mainAxisSize m/MainAxisSize.min
+                       .mainAxisAlignment m/MainAxisAlignment.start)
+             .children
+             [(f/widget
+               :watch [pos !reset-position]
+               (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween)
+               .children
+               [(m/Text "Reset Button")
+                (m/SegmentedButton
+                 .showSelectedIcon false
+                 .segments [(m/ButtonSegment .value :left
+                                             .label (m/Text "Left"))
+                            (m/ButtonSegment .value :right
+                                             .label (m/Text "Right"))]
+                 .selected #{pos}
+                 .onSelectionChanged #(reset! !reset-position (first %)))])]))
+      nil)
+    .icon (m/Icon m/Icons.settings))))
 
 (def colors-button
   (f/widget
@@ -70,10 +98,13 @@
     .icon (m/Icon m/Icons.palette_rounded))))
 
 (def above-abacus
-  (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween
-         .children [reset
-                    digit-display
-                    (m/Row .children [colors-button settings])]))
+  (f/widget
+   :watch [reset-pos !reset-position]
+   (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween)
+   .children ((case reset-pos :left identity :right reverse)
+              [reset
+               digit-display
+               (m/Row .children [colors-button settings-button])])))
 
 (defn main []
   ;; Needs to be initialized before below settings
