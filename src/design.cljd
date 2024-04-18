@@ -8,23 +8,38 @@
 (def frame-width 4)
 (def bead-animation-duration (dc/Duration .milliseconds 300))
 
-(def seed-color (m/Colors.amber))
-(def color-scheme (m/ColorScheme.fromSeed .seedColor seed-color))
+(def colors [m/Colors.amber
+             m/Colors.blueGrey
+             m/Colors.grey
+             m/Colors.lightBlueAccent
+             m/Colors.purpleAccent
+             m/Colors.lightGreen])
 
-(def bead-background-color (.-surfaceVariant ^m/ColorScheme color-scheme))
-(def bead-background (m/BoxDecoration
-                      .color bead-background-color
-                      .border (m/Border.all
-                               .color bead-background-color
-                               .width 0)))
+(def !seed-color (atom (colors 0)))
 
-(def frame-color (.-onSecondaryContainer  ^m/ColorScheme color-scheme))
-(def frame-decoration
+(defn color-scheme [^m/Color color] (m/ColorScheme.fromSeed .seedColor color))
+
+(defn bead-outline-color [^m/Color color]
+  (-> color color-scheme .-onPrimaryContainer))
+
+(defn bead-background-color [^m/Color color]
+  (.-surfaceVariant ^m/ColorScheme (color-scheme color)))
+
+(defn bead-background [^m/Color color]
   (m/BoxDecoration
-   .color frame-color
-   .border (m/Border.all .color frame-color)
+   .color (bead-background-color color)
+   .border (m/Border.all .color (bead-background-color color) .width 0)))
+
+(defn frame-color [^m/Color color]
+  (.-onSecondaryContainer ^m/ColorScheme (color-scheme color)))
+
+(defn frame-decoration [^m/Color color]
+  (m/BoxDecoration
+   .color (frame-color color)
+   .border (m/Border.all .color (frame-color color))
    .borderRadius (m/BorderRadius.all (m/Radius.circular 5))))
 
-(def icon-color (.-primary ^m/ColorScheme color-scheme))
+(defn text-color [^m/Color color] (.-primary ^m/ColorScheme (color-scheme color)))
 
-(def home-background-color (.-secondaryContainer ^m/ColorScheme color-scheme))
+(defn home-background-color [^m/Color color]
+  (.-secondaryContainer ^m/ColorScheme (color-scheme color)))

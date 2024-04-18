@@ -23,19 +23,23 @@
       (< num-digits curr-num-digits)
       (swap! !digits #(vec (drop (- curr-num-digits num-digits) %))))))
 
-(def bead
+(defn bead [color]
   (f/widget
    :width design/bead-width
    :height design/bead-height
    (m/Container .margin (m/EdgeInsets.symmetric .horizontal 1.0))
-   .decoration (m/ShapeDecoration .color m/Colors.amber)
-   .shape (m/BeveledRectangleBorder .side (m/BorderSide .color m/Colors.red))
+   .decoration
+   (m/ShapeDecoration .color color)
+   .shape (m/BeveledRectangleBorder
+           .side (m/BorderSide .color (design/bead-outline-color color)))
    .borderRadius (m/BorderRadius.all
                   (m/Radius.circular (dec (quot design/bead-height 2))))))
 
 (defn rod-stick [.child]
   (f/widget
-   (m/Container .decoration design/bead-background .clipBehavior m/Clip.antiAlias)
+   :watch [color design/!seed-color]
+   (m/Container .decoration (design/bead-background color)
+                .clipBehavior m/Clip.antiAlias)
    (m/Stack .alignment m/Alignment.topCenter .clipBehavior m/Clip.antiAlias)
    .children [(m/Container .width design/rod-width
                            .decoration (m/BoxDecoration .color m/Colors.black))
@@ -55,7 +59,8 @@
                                                 update
                                                 digit-index
                                                 #((if (< % 5) + -) % 5))))
-   bead))
+   :watch [bead-color design/!seed-color]
+   (bead bead-color)))
 
 (defn lower-rod [digit-index digit]
   (f/widget
@@ -77,7 +82,8 @@
                                       #(+ bead-index
                                           (if (< % 5) 0 5)
                                           (if (<= (mod % 5) bead-index) 1 0)))))
-           bead))
+           :watch [bead-color design/!seed-color]
+           (bead bead-color)))
         (range 4))))
 
 (defn dot-beam [digit-index-from-right]
@@ -101,8 +107,9 @@
        (fn [_] (-> maxWidth width->num-digits set-num-digits!)))
 
       (f/widget
+       :watch [color design/!seed-color]
        (m/Container .padding (m/EdgeInsets.all design/frame-width)
-                    .decoration design/frame-decoration
+                    .decoration (design/frame-decoration color)
                     .clipBehavior m/Clip.antiAlias)
        :watch [digits !digits]
        (m/Row .mainAxisSize m/MainAxisSize.min)

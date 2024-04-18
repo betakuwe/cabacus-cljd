@@ -3,6 +3,7 @@
             ["package:flutter/services.dart" :as s]
             [cljd.flutter :as f]
             ["dart:core" :as dc]
+            ["dart:ui" :as ui]
             [abacus]
             [design]))
 
@@ -10,25 +11,69 @@
   (f/widget
    :get {{{:flds [titleMedium]} .-textTheme} m/Theme}
    :watch [digits abacus/!digits]
-   (m/Text (apply str "Current value: " digits) .style titleMedium)))
+   (m/Text.rich
+    (m/TextSpan
+     .text ""
+     .style titleMedium
+     .children
+     (->> (reverse digits)
+          (map-indexed
+           (fn [i d]
+             (m/TextSpan
+              .text (str d)
+              .style (when (= 2 (mod i 3))
+                       (m/TextStyle
+                        .decoration m/TextDecoration.underline
+                        .decorationStyle ui/TextDecorationStyle.solid)))))
+          reverse)))))
 
 (def reset
   (f/widget
    (m/TextButton
     .onPressed (fn [] (swap! abacus/!digits #(vec (repeat (count %) 0)))))
    :get {{{:flds [titleLarge]} .-textTheme} m/Theme}
-   (m/Text "🅲🅰🅱🅰🅲🆄🆂" .style (.copyWith titleLarge .color design/icon-color))))
+   :watch [color design/!seed-color]
+   (m/Text "🅲🅰🅱🅰🅲🆄🆂"
+           .style (.copyWith titleLarge .color (design/text-color color)))))
 
 (def settings
   (m/IconButton .onPressed #() ; show dialog
                 .icon (m/Icon m/Icons.settings)))
 
-(def colors
-  (m/IconButton .onPressed #() ; show dialog
-                .icon (m/Icon m/Icons.palette_rounded)))
+(def colors-button
+  (f/widget
+   :context ctx
+   (m/IconButton
+    .onPressed
+    (fn [] (m/showDialog
+            .context ctx
+            .builder (f/build
+                      (m/AlertDialog .title (m/Text "Colors"))
+                      .content
+                      :width 400
+                      :height 200
+                      :watch [color design/!seed-color]
+                      (m/GridView.count .shrinkWrap true
+                                        .crossAxisSpacing 10
+                                        .crossAxisCount 3)
+                      .children
+                      (map (fn [list-color]
+                             (m/ChoiceChip
+                              .elevation 2
+                              .label (abacus/bead list-color)
+                              .selected (= color list-color)
+                              .showCheckmark false
+                              .onSelected
+                              #(when % (reset! design/!seed-color list-color))))
+                           design/colors)))
+      nil)
+    .icon (m/Icon m/Icons.palette_rounded))))
+
 (def above-abacus
   (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween
-         .children [reset digit-display (m/Row .children [colors settings])]))
+         .children [reset
+                    digit-display
+                    (m/Row .children [colors-button settings])]))
 
 (defn main []
   ;; Needs to be initialized before below settings
@@ -43,15 +88,16 @@
   (s/SystemChrome.setEnabledSystemUIMode s/SystemUiMode.immersiveSticky)
 
   (f/run
+   :watch [color design/!seed-color]
    (m/MaterialApp
     .title "CABACUS"
-    .theme (m/ThemeData .colorScheme design/color-scheme
-                        .iconTheme (m/IconThemeData .color design/icon-color)
+    .theme (m/ThemeData .colorScheme (design/color-scheme color)
+                        .iconTheme (m/IconThemeData .color (design/text-color color))
                         .textTheme nil
                         .splashFactory m/NoSplash.splashFactory
                         .useMaterial3 true))
    .home (m/Container .alignment m/Alignment.center
-                      .color design/home-background-color)
+                      .color (design/home-background-color color))
    m/SafeArea
    (m/Column .mainAxisAlignment m/MainAxisAlignment.center
              .mainAxisSize m/MainAxisSize.min)
