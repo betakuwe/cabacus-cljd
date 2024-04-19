@@ -9,6 +9,8 @@
 
 (def !sound (atom true))
 
+(def !digit-display (atom true))
+
 (def !digits "a vec of digits 0-9" (atom (vec (repeat 5 0))))
 
 (def !seed-color "a m/Color" (atom (design/colors 0)))

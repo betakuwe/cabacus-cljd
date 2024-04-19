@@ -6,7 +6,6 @@
                  :medium {:width 68 :height 40}
                  :large {:width 80 :height 48}})
 
-(def bead-width 80)
 (def rod-width 10)
 (def frame-width 4)
 (def bead-animation-duration (dc/Duration .milliseconds 300))

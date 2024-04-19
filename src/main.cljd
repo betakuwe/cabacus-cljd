@@ -34,7 +34,8 @@
     .onPressed (fn []
                  (when @globals/!vibration (s/HapticFeedback.heavyImpact))
                  (when @globals/!sound
-                   (->> (map #(+ (mod % 5) (quot % 5)) @globals/!digits)
+                   (->> (map #(+ (quot % 5) (if (pos? (mod % 5)) 1 0))
+                             @globals/!digits)
                         (apply +)
                         sound/play-async))
                  (swap! globals/!digits #(vec (repeat (count %) 0)))))
@@ -120,7 +121,23 @@
                   (m/Text "Sound")
                   (m/SizedBox .width 10)
                   (m/Switch .value sound
-                            .onChanged #(reset! globals/!sound %))])])]))
+                            .onChanged #(reset! globals/!sound %))])
+
+                (m/SizedBox .width 20)
+
+                ;; Digit display
+                (f/widget
+                 :watch [display globals/!digit-display]
+                 m/Row
+                 .children
+                 [(m/Icon (if display
+                            m/Icons.sentiment_satisfied_outlined
+                            m/Icons.sentiment_very_satisfied))
+                  (m/SizedBox .width 10)
+                  (m/Text "Display")
+                  (m/SizedBox .width 10)
+                  (m/Switch .value display
+                            .onChanged #(reset! globals/!digit-display %))])])]))
 
       nil)
     .icon (m/Icon m/Icons.settings))))
@@ -156,11 +173,12 @@
 
 (def above-abacus
   (f/widget
-   :watch [reset-pos globals/!reset-position]
+   :watch [reset-pos globals/!reset-position
+           display globals/!digit-display]
    (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween)
    .children ((case reset-pos :left identity :right reverse)
               [reset
-               digit-display
+               (f/widget :when display digit-display)
                (m/Row .children [colors-button settings-button])])))
 
 (defn main []
