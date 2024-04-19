@@ -3,24 +3,28 @@
             ["dart:core" :as dc]
             ["dart:async" :as as]))
 
-(def num-tracks 17)
+(def ^:private num-tracks 17)
 
-(def audioplayers (mapv
-                   #(doto (ap/AudioPlayer)
-                      (.setPlayerMode ap/PlayerMode.lowLatency)
-                      (.setReleaseMode ap/ReleaseMode.stop)
-                      (.setVolume 0.5)
-                      (.setSource (ap/AssetSource (str "sound/bead-" % ".wav"))))
-                   (range num-tracks)))
+(def ^:private audioplayers
+  (mapv #(doto (ap/AudioPlayer)
+           (.setPlayerMode ap/PlayerMode.lowLatency)
+           (.setReleaseMode ap/ReleaseMode.stop)
+           (.setVolume 0.5)
+           (.setSource (ap/AssetSource (str "sound/bead-" % ".wav"))))
+        (range num-tracks)))
+
+(defn- play-index [i]
+  (let [ap (audioplayers i)]
+    (-> (.stop ^ap/AudioPlayer ap)
+        (.then (fn [_] (.resume ^ap/AudioPlayer ap))))))
 
 (defn play
+  "Plays a single random bead sound or n random bead sounds."
   ([]
-   (let [ap (audioplayers (rand-int num-tracks))]
-     (-> (.stop ^ap/AudioPlayer ap)
-         (.then (fn [_] (.resume ^ap/AudioPlayer ap))))))
+   (play-index (rand-int num-tracks)))
   ([n]
    (future
-     (dotimes [_ n]
-       (play)
+     (doseq [i (->> (range num-tracks) cycle (drop n) (take n))]
+       (play-index i)
        (as/Future.delayed (dc/Duration .milliseconds 100))))))
 
