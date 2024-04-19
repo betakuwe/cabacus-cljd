@@ -63,7 +63,7 @@
    (m/GestureDetector .onTapDown (fn [_]
                                    (when @globals/!vibration
                                      (s/HapticFeedback.lightImpact))
-                                   (when @globals/!sound (sound/play))
+                                   (when @globals/!sound (sound/play-async))
                                    (swap! globals/!digits
                                           update
                                           digit-index
@@ -91,7 +91,7 @@
             .onTapDown (fn [_]
                          (when @globals/!vibration
                            (s/HapticFeedback.lightImpact))
-                         (when @globals/!sound (sound/play))
+                         (when @globals/!sound (sound/play-async))
                          (swap! globals/!digits
                                 update
                                 digit-index

@@ -19,18 +19,18 @@
   (doseq [ap audioplayers]
     (await (.stop ^ap/AudioPlayer ap))))
 
-(defn- play-index [i]
+(defn- play-index-async [i]
   (let [ap (audioplayers i)]
     (-> (.stop ^ap/AudioPlayer ap)
         (.then (fn [_] (.resume ^ap/AudioPlayer ap))))))
 
-(defn play
+(defn play-async
   "Plays a single random bead sound or n random bead sounds."
   ([]
-   (play-index (rand-int num-tracks)))
+   (play-index-async (rand-int num-tracks)))
   ([n]
    (future
      (doseq [i (->> (range num-tracks) cycle (drop n) (take n))]
-       (play-index i)
+       (play-index-async i)
        (as/Future.delayed (dc/Duration .milliseconds 100))))))
 

@@ -36,7 +36,7 @@
                  (when @globals/!sound
                    (->> (map #(+ (mod % 5) (quot % 5)) @globals/!digits)
                         (apply +)
-                        sound/play))
+                        sound/play-async))
                  (swap! globals/!digits #(vec (repeat (count %) 0)))))
    :get {{{:flds [titleLarge]} .-textTheme} m/Theme}
    :watch [color globals/!seed-color]
@@ -141,15 +141,16 @@
                                         .crossAxisSpacing 10
                                         .crossAxisCount 3)
                       .children
-                      (map (fn [list-color]
-                             (m/ChoiceChip
-                              .elevation 2
-                              .label (abacus/bead list-color)
-                              .selected (= @globals/!seed-color list-color)
-                              .showCheckmark false
-                              .onSelected
-                              #(when % (reset! globals/!seed-color list-color))))
-                           design/colors)))
+                      (map
+                       (fn [list-color]
+                         (m/ChoiceChip
+                          .elevation 2
+                          .label (abacus/bead list-color)
+                          .selected (= @globals/!seed-color list-color)
+                          .showCheckmark false
+                          .onSelected
+                          #(when % (reset! globals/!seed-color list-color))))
+                       design/colors)))
       nil)
     .icon (m/Icon m/Icons.palette_rounded))))
 
@@ -173,18 +174,19 @@
    (s/SystemUiOverlayStyle .systemNavigationBarColor m/Colors.transparent))
   ;; Hides the top system bar
   (s/SystemChrome.setEnabledSystemUIMode s/SystemUiMode.immersiveSticky)
-
+  ;; Initialize audioplayers
   (sound/init)
 
   (f/run
    :watch [color globals/!seed-color]
    (m/MaterialApp
     .title "CABACUS"
-    .theme (m/ThemeData .colorScheme (design/color-scheme color)
-                        .iconTheme (m/IconThemeData .color (design/text-color color))
-                        .textTheme nil
-                        .splashFactory m/NoSplash.splashFactory
-                        .useMaterial3 true))
+    .theme (m/ThemeData
+            .colorScheme (design/color-scheme color)
+            .iconTheme (m/IconThemeData .color (design/text-color color))
+            .textTheme nil
+            .splashFactory m/NoSplash.splashFactory
+            .useMaterial3 true))
    .home (m/Container .alignment m/Alignment.center
                       .color (design/home-background-color color))
    m/SafeArea
