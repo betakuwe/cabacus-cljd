@@ -1,0 +1,14 @@
+(ns globals
+  (:require [design]))
+
+(def !reset-position ":left :right" (atom :left))
+
+(def !bead-size ":small :medium :large" (atom :large))
+
+(def !vibration (atom true))
+
+(def !sound (atom true))
+
+(def !digits "a vec of digits 0-9" (atom (vec (repeat 5 0))))
+
+(def !seed-color "a m/Color" (atom (design/colors 0)))

@@ -1,0 +1,26 @@
+(ns sound
+  (:require ["package:audioplayers/audioplayers.dart" :as ap]
+            ["dart:core" :as dc]
+            ["dart:async" :as as]))
+
+(def num-tracks 17)
+
+(def audioplayers (mapv
+                   #(doto (ap/AudioPlayer)
+                      (.setPlayerMode ap/PlayerMode.lowLatency)
+                      (.setReleaseMode ap/ReleaseMode.stop)
+                      (.setVolume 0.5)
+                      (.setSource (ap/AssetSource (str "sound/bead-" % ".wav"))))
+                   (range num-tracks)))
+
+(defn play
+  ([]
+   (let [ap (audioplayers (rand-int num-tracks))]
+     (-> (.stop ^ap/AudioPlayer ap)
+         (.then (fn [_] (.resume ^ap/AudioPlayer ap))))))
+  ([n]
+   (future
+     (dotimes [_ n]
+       (play)
+       (as/Future.delayed (dc/Duration .milliseconds 100))))))
+
