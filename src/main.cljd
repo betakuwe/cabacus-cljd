@@ -93,17 +93,34 @@
 
               (m/SizedBox .height 10)
 
-              ;; Vibration setting
-              (f/widget
-               :watch [vibration globals/!vibration]
-               m/Row
+              ;; Vibration and Sound setting
+              (m/Row
                .children
-               [(m/Icon (if vibration m/Icons.vibration m/Icons.crop_portrait))
-                (m/SizedBox .width 10)
-                (m/Text "Vibration")
-                (m/SizedBox .width 10)
-                (m/Switch .value vibration
-                          .onChanged #(reset! globals/!vibration %))])]))
+               [;; Vibration setting
+                (f/widget
+                 :watch [vibration globals/!vibration]
+                 m/Row
+                 .children
+                 [(m/Icon (if vibration m/Icons.vibration m/Icons.crop_portrait))
+                  (m/SizedBox .width 10)
+                  (m/Text "Vibration")
+                  (m/SizedBox .width 10)
+                  (m/Switch .value vibration
+                            .onChanged #(reset! globals/!vibration %))])
+
+                (m/SizedBox .width 20)
+
+                ;; Sound setting
+                (f/widget
+                 :watch [sound globals/!sound]
+                 m/Row
+                 .children
+                 [(m/Icon (if sound m/Icons.volume_up m/Icons.volume_off))
+                  (m/SizedBox .width 10)
+                  (m/Text "Sound")
+                  (m/SizedBox .width 10)
+                  (m/Switch .value sound
+                            .onChanged #(reset! globals/!sound %))])])]))
 
       nil)
     .icon (m/Icon m/Icons.settings))))
