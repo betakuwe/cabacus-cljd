@@ -174,6 +174,8 @@
   ;; Hides the top system bar
   (s/SystemChrome.setEnabledSystemUIMode s/SystemUiMode.immersiveSticky)
 
+  (sound/init)
+
   (f/run
    :watch [color globals/!seed-color]
    (m/MaterialApp

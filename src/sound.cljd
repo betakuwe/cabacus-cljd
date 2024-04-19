@@ -13,6 +13,12 @@
            (.setSource (ap/AssetSource (str "sound/bead-" % ".wav"))))
         (range num-tracks)))
 
+(defn init
+  "Initializes the bead audioplayers."
+  []
+  (doseq [ap audioplayers]
+    (await (.stop ^ap/AudioPlayer ap))))
+
 (defn- play-index [i]
   (let [ap (audioplayers i)]
     (-> (.stop ^ap/AudioPlayer ap)
