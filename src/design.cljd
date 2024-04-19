@@ -2,7 +2,10 @@
   (:require ["package:flutter/material.dart" :as m]
             ["dart:core" :as dc]))
 
-(def bead-height 48)
+(def bead-sizes {:small {:width 62 :height 36}
+                 :medium {:width 68 :height 40}
+                 :large {:width 80 :height 48}})
+
 (def bead-width 80)
 (def rod-width 10)
 (def frame-width 4)
@@ -15,31 +18,31 @@
              m/Colors.purpleAccent
              m/Colors.lightGreen])
 
-(def !seed-color (atom (colors 0)))
+(defn color-scheme [^m/Color seed-color]
+  (m/ColorScheme.fromSeed .seedColor seed-color))
 
-(defn color-scheme [^m/Color color] (m/ColorScheme.fromSeed .seedColor color))
+(defn bead-outline-color [^m/Color seed-color]
+  (.-onPrimaryContainer ^m/ColorScheme (color-scheme seed-color)))
 
-(defn bead-outline-color [^m/Color color]
-  (-> color color-scheme .-onPrimaryContainer))
+(defn bead-background-color [^m/Color seed-color]
+  (.-surfaceVariant ^m/ColorScheme (color-scheme seed-color)))
 
-(defn bead-background-color [^m/Color color]
-  (.-surfaceVariant ^m/ColorScheme (color-scheme color)))
-
-(defn bead-background [^m/Color color]
+(defn bead-background [^m/Color seed-color]
   (m/BoxDecoration
-   .color (bead-background-color color)
-   .border (m/Border.all .color (bead-background-color color) .width 0)))
+   .color (bead-background-color seed-color)
+   .border (m/Border.all .color (bead-background-color seed-color) .width 0)))
 
-(defn frame-color [^m/Color color]
-  (.-onSecondaryContainer ^m/ColorScheme (color-scheme color)))
+(defn frame-color [^m/Color seed-color]
+  (.-onSecondaryContainer ^m/ColorScheme (color-scheme seed-color)))
 
-(defn frame-decoration [^m/Color color]
+(defn frame-decoration [^m/Color seed-color]
   (m/BoxDecoration
-   .color (frame-color color)
-   .border (m/Border.all .color (frame-color color))
+   .color (frame-color seed-color)
+   .border (m/Border.all .color (frame-color seed-color))
    .borderRadius (m/BorderRadius.all (m/Radius.circular 5))))
 
-(defn text-color [^m/Color color] (.-primary ^m/ColorScheme (color-scheme color)))
+(defn text-color [^m/Color seed-color]
+  (.-primary ^m/ColorScheme (color-scheme seed-color)))
 
-(defn home-background-color [^m/Color color]
-  (.-secondaryContainer ^m/ColorScheme (color-scheme color)))
+(defn home-background-color [^m/Color seed-color]
+  (.-secondaryContainer ^m/ColorScheme (color-scheme seed-color)))

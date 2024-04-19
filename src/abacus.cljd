@@ -1,43 +1,44 @@
 (ns abacus
   (:require ["package:flutter/material.dart" :as m]
+            ["package:flutter/services.dart" :as s]
             [cljd.flutter :as f]
             ["dart:ui" :as ui]
+            [globals]
             [design]))
 
-(def !bead-size (atom {:width 80 :height 48}))
-
-(def !digits (atom (vec (repeat 5 0))))
-
 (defn width->num-digits [width]
-  (quot (- width (* 2 design/frame-width) 2) (:width @!bead-size)))
+  (quot (- width (* 2 design/frame-width) 2)
+        (-> @globals/!bead-size design/bead-sizes :width)))
 
 (defn set-num-digits!
   "Pads left of !digits with 0 if extend, drops from left if reduce."
   [num-digits]
-  (let [curr-num-digits (count @!digits)]
+  (let [curr-num-digits (count @globals/!digits)]
     (cond
       (> num-digits curr-num-digits)
-      (swap! !digits
+      (swap! globals/!digits
              #(vec (concat (repeat (- num-digits curr-num-digits) 0) %)))
 
       (< num-digits curr-num-digits)
-      (swap! !digits #(vec (drop (- curr-num-digits num-digits) %))))))
+      (swap! globals/!digits #(vec (drop (- curr-num-digits num-digits) %))))))
 
 (defn bead [color]
   (f/widget
-   :width design/bead-width
-   :height design/bead-height
+   :watch [{:keys [width height]} globals/!bead-size
+           :> (-> deref design/bead-sizes)]
+   :width width
+   :height height
    (m/Container .margin (m/EdgeInsets.symmetric .horizontal 1.0))
    .decoration
    (m/ShapeDecoration .color color)
    .shape (m/BeveledRectangleBorder
            .side (m/BorderSide .color (design/bead-outline-color color)))
    .borderRadius (m/BorderRadius.all
-                  (m/Radius.circular (dec (quot design/bead-height 2))))))
+                  (m/Radius.circular (dec (quot height 2))))))
 
 (defn rod-stick [.child]
   (f/widget
-   :watch [color design/!seed-color]
+   :watch [color globals/!seed-color]
    (m/Container .decoration (design/bead-background color)
                 .clipBehavior m/Clip.antiAlias)
    (m/Stack .alignment m/Alignment.topCenter .clipBehavior m/Clip.antiAlias)
@@ -45,28 +46,37 @@
                            .decoration (m/BoxDecoration .color m/Colors.black))
               child]))
 
-(defn upper-rod [digit-index digit]
+(defn upper-rod [digit-index]
   (f/widget
-   :width design/bead-width
-   :height (* 1.5 design/bead-height)
+   :watch [{:keys [width height]} globals/!bead-size
+           :> (-> deref design/bead-sizes)]
+   :width width
+   :height (* 1.5 height)
    rod-stick
+   :watch [{digit digit-index} globals/!digits]
    (m/AnimatedAlign .alignment (if (< digit 5)
                                  m/Alignment.topCenter
                                  m/Alignment.bottomCenter)
                     .duration design/bead-animation-duration
                     .curve m/Curves.easeInOutBack)
-   (m/GestureDetector .onTapDown (fn [_] (swap! !digits
-                                                update
-                                                digit-index
-                                                #((if (< % 5) + -) % 5))))
-   :watch [bead-color design/!seed-color]
+   :watch [vibration globals/!vibration]
+   (m/GestureDetector .onTapDown (fn [_]
+                                   (when vibration (s/HapticFeedback.lightImpact))
+                                   (swap! globals/!digits
+                                          update
+                                          digit-index
+                                          #((if (< % 5) + -) % 5))))
+   :watch [bead-color globals/!seed-color]
    (bead bead-color)))
 
-(defn lower-rod [digit-index digit]
+(defn lower-rod [digit-index]
   (f/widget
-   :width design/bead-width
-   :height (* 4.5 design/bead-height)
+   :watch [{:keys [width height]} globals/!bead-size
+           :> (-> deref design/bead-sizes)]
+   :width width
+   :height (* 4.5 height)
    rod-stick
+   :watch [{digit digit-index} globals/!digits]
    (m/Column .mainAxisAlignment m/MainAxisAlignment.end)
    .children
    (map (fn [bead-index]
@@ -75,19 +85,24 @@
             .offset (ui/Offset 0 (if (< bead-index (mod digit 5)) -0.5 0))
             .duration design/bead-animation-duration
             .curve m/Curves.easeInOutBack)
+           :watch [vibration globals/!vibration]
            (m/GestureDetector
-            .onTapDown (fn [_] (swap! !digits
-                                      update
-                                      digit-index
-                                      #(+ bead-index
-                                          (if (< % 5) 0 5)
-                                          (if (<= (mod % 5) bead-index) 1 0)))))
-           :watch [bead-color design/!seed-color]
+            .onTapDown (fn [_]
+                         (when vibration (s/HapticFeedback.lightImpact))
+                         (swap! globals/!digits
+                                update
+                                digit-index
+                                #(+ bead-index
+                                    (if (< % 5) 0 5)
+                                    (if (<= (mod % 5) bead-index) 1 0)))))
+           :watch [bead-color globals/!seed-color]
            (bead bead-color)))
         (range 4))))
 
 (defn dot-beam [digit-index-from-right]
-  (f/widget :width design/bead-width
+  (f/widget :watch [width globals/!bead-size
+                    :> (-> deref design/bead-sizes :width)]
+            :width width
             :height design/frame-width
             :when (zero? (mod digit-index-from-right 3))
             m/Center
@@ -98,6 +113,8 @@
    .builder
    (f/build
     [^m/BoxConstraints {:flds [maxWidth maxHeight]}]
+    ;; Rebuild when bead size changes to reevaluate num-digits
+    :watch [_ globals/!bead-size]
     (do
       ;; set num-digits AFTER widget is done building in this frame
       ;; otherwise leads to setState() or markNeedsBuild() called during build.
@@ -107,17 +124,17 @@
        (fn [_] (-> maxWidth width->num-digits set-num-digits!)))
 
       (f/widget
-       :watch [color design/!seed-color]
+       :watch [color globals/!seed-color]
        (m/Container .padding (m/EdgeInsets.all design/frame-width)
                     .decoration (design/frame-decoration color)
                     .clipBehavior m/Clip.antiAlias)
-       :watch [digits !digits]
+       :watch [num-digits globals/!digits :> (-> deref count)]
        (m/Row .mainAxisSize m/MainAxisSize.min)
        .children
-       (map-indexed
-        (fn [digit-index digit]
-          (m/Column .mainAxisSize m/MainAxisSize.min
-                    .children [(upper-rod digit-index digit)
-                               (dot-beam (- (count digits) digit-index))
-                               (lower-rod digit-index digit)]))
-        digits))))))
+       (map (fn [digit-index]
+              (m/Column .mainAxisSize m/MainAxisSize.min
+                        .children [(upper-rod digit-index)
+                                   (dot-beam (- num-digits digit-index))
+                                   (lower-rod digit-index)]))
+            (range num-digits)))))))
+

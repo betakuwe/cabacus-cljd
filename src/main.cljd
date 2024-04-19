@@ -2,15 +2,15 @@
   (:require ["package:flutter/material.dart" :as m]
             ["package:flutter/services.dart" :as s]
             [cljd.flutter :as f]
-            ["dart:core" :as dc]
             ["dart:ui" :as ui]
+            [globals]
             [abacus]
             [design]))
 
 (def digit-display
   (f/widget
    :get {{{:flds [titleMedium]} .-textTheme} m/Theme}
-   :watch [digits abacus/!digits]
+   :watch [digits globals/!digits]
    (m/Text.rich
     (m/TextSpan
      .text ""
@@ -29,14 +29,15 @@
 
 (def reset
   (f/widget
+   :watch [vibration globals/!vibration]
    (m/TextButton
-    .onPressed (fn [] (swap! abacus/!digits #(vec (repeat (count %) 0)))))
+    .onPressed (fn []
+                 (when vibration (s/HapticFeedback.heavyImpact))
+                 (swap! globals/!digits #(vec (repeat (count %) 0)))))
    :get {{{:flds [titleLarge]} .-textTheme} m/Theme}
-   :watch [color design/!seed-color]
+   :watch [color globals/!seed-color]
    (m/Text "🅲🅰🅱🅰🅲🆄🆂"
            .style (.copyWith titleLarge .color (design/text-color color)))))
-
-(def !reset-position (atom :left))
 
 (def settings-button
   (f/widget
@@ -52,8 +53,9 @@
              (m/Column .mainAxisSize m/MainAxisSize.min
                        .mainAxisAlignment m/MainAxisAlignment.start)
              .children
-             [(f/widget
-               :watch [pos !reset-position]
+             [;; Reset button position
+              (f/widget
+               :watch [pos globals/!reset-position]
                (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween)
                .children
                [(m/Text "Reset Button")
@@ -64,7 +66,41 @@
                             (m/ButtonSegment .value :right
                                              .label (m/Text "Right"))]
                  .selected #{pos}
-                 .onSelectionChanged #(reset! !reset-position (first %)))])]))
+                 .onSelectionChanged
+                 #(reset! globals/!reset-position (first %)))])
+
+              (m/SizedBox .height 10)
+
+              ;; Bead size setting
+              (f/widget
+               :watch [size globals/!bead-size]
+               (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween)
+               .children
+               [(m/Text "Bead size")
+                (m/SizedBox .width 10)
+                (m/SegmentedButton
+                 .showSelectedIcon false
+                 .segments
+                 [(m/ButtonSegment .value :small .label (m/Text "Small"))
+                  (m/ButtonSegment .value :medium .label (m/Text "Medium"))
+                  (m/ButtonSegment .value :large .label (m/Text "Large"))]
+                 .selected #{size}
+                 .onSelectionChanged #(reset! globals/!bead-size (first %)))])
+
+              (m/SizedBox .height 10)
+
+              ;; Vibration setting
+              (f/widget
+               :watch [vibration globals/!vibration]
+               m/Row
+               .children
+               [(m/Icon (if vibration m/Icons.vibration m/Icons.crop_portrait))
+                (m/SizedBox .width 10)
+                (m/Text "Vibration")
+                (m/SizedBox .width 10)
+                (m/Switch .value vibration
+                          .onChanged #(reset! globals/!vibration %))])]))
+
       nil)
     .icon (m/Icon m/Icons.settings))))
 
@@ -80,7 +116,7 @@
                       .content
                       :width 400
                       :height 200
-                      :watch [color design/!seed-color]
+                      :watch [color globals/!seed-color]
                       (m/GridView.count .shrinkWrap true
                                         .crossAxisSpacing 10
                                         .crossAxisCount 3)
@@ -92,14 +128,14 @@
                               .selected (= color list-color)
                               .showCheckmark false
                               .onSelected
-                              #(when % (reset! design/!seed-color list-color))))
+                              #(when % (reset! globals/!seed-color list-color))))
                            design/colors)))
       nil)
     .icon (m/Icon m/Icons.palette_rounded))))
 
 (def above-abacus
   (f/widget
-   :watch [reset-pos !reset-position]
+   :watch [reset-pos globals/!reset-position]
    (m/Row .mainAxisAlignment m/MainAxisAlignment.spaceBetween)
    .children ((case reset-pos :left identity :right reverse)
               [reset
@@ -119,7 +155,7 @@
   (s/SystemChrome.setEnabledSystemUIMode s/SystemUiMode.immersiveSticky)
 
   (f/run
-   :watch [color design/!seed-color]
+   :watch [color globals/!seed-color]
    (m/MaterialApp
     .title "CABACUS"
     .theme (m/ThemeData .colorScheme (design/color-scheme color)
