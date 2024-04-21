@@ -3,10 +3,12 @@
             ["package:flutter/services.dart" :as s]
             [cljd.flutter :as f]
             ["dart:ui" :as ui]
+            ["dart:core" :as dc]
             [globals]
             [abacus]
             [sound]
-            [design]))
+            [design]
+            [shared-preferences]))
 
 (def digit-display
   (f/widget
@@ -34,13 +36,14 @@
     .onPressed (fn []
                  (when @globals/!vibration (s/HapticFeedback.heavyImpact))
                  (when @globals/!sound
-                   (->> (map #(+ (quot % 5) (if (pos? (mod % 5)) 1 0))
-                             @globals/!digits)
-                        (apply +)
-                        sound/play-async))
+                   (sound/play-async
+                    (transduce (map #(+ (quot % 5) (if (pos? (mod % 5)) 1 0)))
+                               +
+                               0
+                               @globals/!digits)))
                  (swap! globals/!digits #(vec (repeat (count %) 0)))))
    :get {{{:flds [titleLarge]} .-textTheme} m/Theme}
-   :watch [color globals/!seed-color]
+   :watch [color globals/!color-index :> (-> deref design/colors)]
    (m/Text "🅲🅰🅱🅰🅲🆄🆂"
            .style (.copyWith titleLarge .color (design/text-color color)))))
 
@@ -159,15 +162,15 @@
                                         .crossAxisCount 3)
                       .children
                       (map
-                       (fn [list-color]
+                       (fn [color-index]
                          (m/ChoiceChip
                           .elevation 2
-                          .label (abacus/bead list-color)
-                          .selected (= @globals/!seed-color list-color)
+                          .label (abacus/bead (design/colors color-index))
+                          .selected (= @globals/!color-index color-index)
                           .showCheckmark false
                           .onSelected
-                          #(when % (reset! globals/!seed-color list-color))))
-                       design/colors)))
+                          #(when % (reset! globals/!color-index color-index))))
+                       (range (count design/colors)))))
       nil)
     .icon (m/Icon m/Icons.palette_rounded))))
 
@@ -192,11 +195,13 @@
    (s/SystemUiOverlayStyle .systemNavigationBarColor m/Colors.transparent))
   ;; Hides the top system bar
   (s/SystemChrome.setEnabledSystemUIMode s/SystemUiMode.immersiveSticky)
-  ;; Initialize audioplayers
-  (sound/init)
+  ;; Preload sounds (otherwise, some initial sounds are mute)
+  (await (sound/init-async))
+  ;; Initialize SharedPreferences for persistent data
+  (await (shared-preferences/init-async))
 
   (f/run
-   :watch [color globals/!seed-color]
+   :watch [color globals/!color-index :> (-> deref design/colors)]
    (m/MaterialApp
     .title "CABACUS"
     .theme (m/ThemeData

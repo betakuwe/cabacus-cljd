@@ -13,7 +13,7 @@
            (.setSource (ap/AssetSource (str "sound/bead-" % ".wav"))))
         (range num-tracks)))
 
-(defn init
+(defn init-async
   "Initializes the bead audioplayers."
   []
   (doseq [ap audioplayers]
@@ -30,7 +30,10 @@
    (play-index-async (rand-int num-tracks)))
   ([n]
    (future
-     (doseq [i (->> (range num-tracks) cycle (drop n) (take n))]
+     (doseq [i (->> (range num-tracks)
+                    cycle
+                    (drop (rand-int num-tracks))
+                    (take n))]
        (play-index-async i)
        (as/Future.delayed (dc/Duration .milliseconds 100))))))
 

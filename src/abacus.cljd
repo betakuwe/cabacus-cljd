@@ -39,7 +39,7 @@
 
 (defn rod-stick [.child]
   (f/widget
-   :watch [color globals/!seed-color]
+   :watch [color globals/!color-index :> (-> deref design/colors)]
    (m/Container .decoration (design/bead-background color)
                 .clipBehavior m/Clip.antiAlias)
    (m/Stack .alignment m/Alignment.topCenter .clipBehavior m/Clip.antiAlias)
@@ -68,7 +68,7 @@
                                           update
                                           digit-index
                                           #((if (< % 5) + -) % 5))))
-   :watch [bead-color globals/!seed-color]
+   :watch [bead-color globals/!color-index :> (-> deref design/colors)]
    (bead bead-color)))
 
 (defn lower-rod [digit-index]
@@ -98,7 +98,7 @@
                                 #(+ bead-index
                                     (if (< % 5) 0 5)
                                     (if (<= (mod % 5) bead-index) 1 0)))))
-           :watch [bead-color globals/!seed-color]
+           :watch [bead-color globals/!color-index :> (-> deref design/colors)]
            (bead bead-color)))
         (range 4))))
 
@@ -127,7 +127,7 @@
        (fn [_] (-> maxWidth width->num-digits set-num-digits!)))
 
       (f/widget
-       :watch [color globals/!seed-color]
+       :watch [color globals/!color-index :> (-> deref design/colors)]
        (m/Container .padding (m/EdgeInsets.all design/frame-width)
                     .decoration (design/frame-decoration color)
                     .clipBehavior m/Clip.antiAlias)

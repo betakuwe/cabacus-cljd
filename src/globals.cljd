@@ -1,16 +1,19 @@
 (ns globals
-  (:require [design]))
+  (:require [design]
+            [shared-preferences :as sp]))
 
-(def !reset-position ":left :right" (atom :left))
+(def !reset-position ":left :right" (sp/persistent-atom :reset-position :left))
 
-(def !bead-size ":small :medium :large" (atom :large))
+(def !bead-size ":small :medium :large" (sp/persistent-atom :bead-size :large))
 
-(def !vibration (atom true))
+(def !vibration (sp/persistent-atom :vibration true))
 
-(def !sound (atom true))
+(def !sound (sp/persistent-atom :sound true))
 
-(def !digit-display (atom true))
+(def !digit-display (sp/persistent-atom :digit-display true))
+
+(def !color-index
+  "The index of color selected of `design/colors`"
+  (sp/persistent-atom :color-index 0))
 
 (def !digits "a vec of digits 0-9" (atom (vec (repeat 5 0))))
-
-(def !seed-color "a m/Color" (atom (design/colors 0)))
