@@ -4,7 +4,7 @@
 (def ^:private instance (atom nil))
 
 (defn init-async
-  "`init` must be called before any data can be persistent. Call it in `main`"
+  "Must be called before any data can be persistent. Call it in `main`"
   []
   (reset! instance (await (sp/SharedPreferences.getInstance))))
 
