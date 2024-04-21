@@ -29,11 +29,10 @@
   ([]
    (play-index-async (rand-int num-tracks)))
   ([n]
-   (future
-     (doseq [i (->> (range num-tracks)
-                    cycle
-                    (drop (rand-int num-tracks))
-                    (take n))]
-       (play-index-async i)
-       (as/Future.delayed (dc/Duration .milliseconds 100))))))
+   (future (doseq [i (->> (range num-tracks)
+                          cycle
+                          (drop (rand-int num-tracks))
+                          (take n))]
+             (play-index-async i)
+             (as/Future.delayed (dc/Duration .milliseconds 100))))))
 
