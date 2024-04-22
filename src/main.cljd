@@ -3,7 +3,6 @@
             ["package:flutter/services.dart" :as s]
             [cljd.flutter :as f]
             ["dart:ui" :as ui]
-            ["dart:core" :as dc]
             [globals]
             [abacus]
             [sound]
@@ -137,7 +136,7 @@
                             m/Icons.sentiment_satisfied_outlined
                             m/Icons.sentiment_very_satisfied))
                   (m/SizedBox .width 10)
-                  (m/Text "Display")
+                  (m/Text "Hint")
                   (m/SizedBox .width 10)
                   (m/Switch .value display
                             .onChanged #(reset! globals/!digit-display %))])])]))

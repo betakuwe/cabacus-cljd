@@ -36,8 +36,9 @@
                               (string? v) [get-string set-string!]
                               (keyword? v) [get-keyword set-keyword!])
         k-name (name k)
-        val (if (and (some? @instance)
-                     (.containsKey ^sp/SharedPreferences @instance k-name))
+        instance-value @instance
+        val (if (and (some? instance-value)
+                     (.containsKey ^sp/SharedPreferences instance-value k-name))
               (getter k-name)
               v)
         new-atom (atom val)]
