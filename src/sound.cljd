@@ -34,5 +34,5 @@
                           (drop (rand-int num-tracks))
                           (take n))]
              (play-index-async i)
-             (as/Future.delayed (dc/Duration .milliseconds 100))))))
+             (await (as/Future.delayed (dc/Duration .milliseconds 3)))))))
 

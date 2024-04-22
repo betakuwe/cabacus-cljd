@@ -27,8 +27,9 @@
   (f/widget
    :watch [{:keys [width height]} globals/!bead-size
            :> (-> deref design/bead-sizes)]
-   :width width
-   :height height
+   ; :width width
+   ; :height height
+   (m/Container .width width .height height .decoration (m/BoxDecoration))
    (m/Container .margin (m/EdgeInsets.symmetric .horizontal 1.0))
    .decoration
    (m/ShapeDecoration .color color)
@@ -53,13 +54,7 @@
            :> (-> deref design/bead-sizes)]
    :width width
    :height (* 1.5 height)
-   rod-stick
    :watch [{digit digit-index} globals/!digits]
-   (m/AnimatedAlign .alignment (if (< digit 5)
-                                 m/Alignment.topCenter
-                                 m/Alignment.bottomCenter)
-                    .duration design/bead-animation-duration
-                    .curve m/Curves.easeInOutBack)
    (m/GestureDetector .onTapDown (fn [_]
                                    (when @globals/!vibration
                                      (s/HapticFeedback.lightImpact))
@@ -68,6 +63,12 @@
                                           update
                                           digit-index
                                           #((if (< % 5) + -) % 5))))
+   rod-stick
+   (m/AnimatedAlign .alignment (if (< digit 5)
+                                 m/Alignment.topCenter
+                                 m/Alignment.bottomCenter)
+                    .duration design/bead-animation-duration
+                    .curve m/Curves.easeInOutBack)
    :watch [bead-color globals/!color-index :> (-> deref design/colors)]
    (bead bead-color)))
 
@@ -78,11 +79,11 @@
    :width width
    :height (* 4.5 height)
    rod-stick
-   :watch [{digit digit-index} globals/!digits]
    (m/Column .mainAxisAlignment m/MainAxisAlignment.end)
    .children
    (map (fn [bead-index]
           (f/widget
+           :watch [{digit digit-index} globals/!digits]
            (m/AnimatedSlide
             .offset (ui/Offset 0 (if (< bead-index (mod digit 5)) -0.5 0))
             .duration design/bead-animation-duration

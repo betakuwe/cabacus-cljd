@@ -8,26 +8,20 @@
   []
   (reset! instance (await (sp/SharedPreferences.getInstance))))
 
-(defn- get-bool [k-name]
-  (.getBool ^sp/SharedPreferences @instance (name k-name)))
-(defn- set-bool! [k-name v] (.setBool ^sp/SharedPreferences @instance k-name v))
+(defn- get-bool [k] (.getBool ^sp/SharedPreferences @instance k))
+(defn- set-bool! [k v] (.setBool ^sp/SharedPreferences @instance k v))
 
-(defn- get-int [k-name]
-  (.getInt ^sp/SharedPreferences @instance (name k-name)))
-(defn- set-int! [k-name v] (.setInt ^sp/SharedPreferences @instance k-name v))
+(defn- get-int [k] (.getInt ^sp/SharedPreferences @instance k))
+(defn- set-int! [k v] (.setInt ^sp/SharedPreferences @instance k v))
 
-(defn- get-double [k-name]
-  (.getDouble ^sp/SharedPreferences @instance (name k-name)))
-(defn- set-double! [k-name v]
-  (.setDouble ^sp/SharedPreferences @instance k-name v))
+(defn- get-double [k] (.getDouble ^sp/SharedPreferences @instance k))
+(defn- set-double! [k v] (.setDouble ^sp/SharedPreferences @instance k v))
 
-(defn- get-string [k-name]
-  (.getString ^sp/SharedPreferences @instance (name k-name)))
-(defn- set-string! [k-name v]
-  (.setString ^sp/SharedPreferences @instance k-name v))
+(defn- get-string [k] (.getString ^sp/SharedPreferences @instance k))
+(defn- set-string! [k v] (.setString ^sp/SharedPreferences @instance k v))
 
-(defn- get-keyword [k-name] (keyword (get-string k-name)))
-(defn- set-keyword! [k-name v] (set-string! k-name (name v)))
+(defn- get-keyword [k] (keyword (get-string k)))
+(defn- set-keyword! [k v] (set-string! k (name v)))
 
 (defn persistent-atom
   "Creates an atom whose data is persistent using SharedPreferences.
