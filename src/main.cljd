@@ -157,9 +157,10 @@
                       .content
                       :width 400
                       :height 200
-                      (m/GridView.count .shrinkWrap true
-                                        .crossAxisSpacing 10
-                                        .crossAxisCount 3)
+                      (m/Wrap .alignment m/WrapAlignment.center
+                              .runAlignment m/WrapAlignment.center
+                              .runSpacing 20
+                              .spacing 20)
                       .children
                       (map
                        (fn [color-index]
