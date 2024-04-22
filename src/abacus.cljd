@@ -53,6 +53,12 @@
    :width width
    :height (* 1.5 height)
    :watch [{digit digit-index} globals/!digits]
+   rod-stick
+   (m/AnimatedAlign .alignment (if (< digit 5)
+                                 m/Alignment.topCenter
+                                 m/Alignment.bottomCenter)
+                    .duration design/bead-animation-duration
+                    .curve m/Curves.easeInOutBack)
    (m/GestureDetector .onTapDown (fn [_]
                                    (when @globals/!vibration
                                      (s/HapticFeedback.lightImpact))
@@ -61,12 +67,6 @@
                                           update
                                           digit-index
                                           #((if (< % 5) + -) % 5))))
-   rod-stick
-   (m/AnimatedAlign .alignment (if (< digit 5)
-                                 m/Alignment.topCenter
-                                 m/Alignment.bottomCenter)
-                    .duration design/bead-animation-duration
-                    .curve m/Curves.easeInOutBack)
    :watch [bead-color globals/!color-index :> (-> deref design/colors)]
    (bead bead-color)))
 

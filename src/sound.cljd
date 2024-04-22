@@ -1,7 +1,6 @@
 (ns sound
   (:require ["package:audioplayers/audioplayers.dart" :as ap]
-            ["dart:core" :as dc]
-            ["dart:async" :as as]))
+            ["dart:core" :as dc]))
 
 (def ^:private num-tracks 17)
 
@@ -14,25 +13,29 @@
         (range num-tracks)))
 
 (defn init-async
-  "Initializes the bead audioplayers."
+  "Preload the bead audioplayers."
   []
-  (doseq [ap audioplayers]
-    (await (.stop ^ap/AudioPlayer ap))))
+  (Future.wait (map #(.stop ^ap/AudioPlayer %) audioplayers)))
 
-(defn- play-index-async [i]
-  (let [ap (audioplayers i)]
-    (-> (.stop ^ap/AudioPlayer ap)
-        (.then (fn [_] (.resume ^ap/AudioPlayer ap))))))
+(defn- play-index-async
+  ([i]
+   (future (let [ap (audioplayers i)]
+             (await (.stop ^ap/AudioPlayer ap))
+             (.resume ^ap/AudioPlayer ap))))
+  ([& is]
+   (future (doseq [i is]
+             (play-index-async i)
+             (await (Future.delayed (dc/Duration .milliseconds 4)))))))
+
+(def ^:private !random-indices
+  (atom (->> (range num-tracks) (partial shuffle) repeatedly (apply concat))))
 
 (defn play-async
   "Plays a single random bead sound or n random bead sounds."
   ([]
-   (play-index-async (rand-int num-tracks)))
+   (play-index-async (first @!random-indices))
+   (swap! !random-indices (partial drop 1)))
   ([n]
-   (future (doseq [i (->> (range num-tracks)
-                          cycle
-                          (drop (rand-int num-tracks))
-                          (take n))]
-             (play-index-async i)
-             (await (as/Future.delayed (dc/Duration .milliseconds 4)))))))
+   (apply play-index-async (take n @!random-indices))
+   (swap! !random-indices (partial drop n))))
 
