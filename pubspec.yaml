@@ -36,6 +36,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   audioplayers: ^6.0.0
   cupertino_icons: ^1.0.6
+  flutter_launcher_icons: ^0.13.1
   shared_preferences: ^2.2.3
 
 dev_dependencies:
@@ -92,3 +93,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+# dart pub run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  android: true
+  remove_alpha_ios: true
+  ios: true
