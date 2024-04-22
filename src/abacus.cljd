@@ -27,8 +27,6 @@
   (f/widget
    :watch [{:keys [width height]} globals/!bead-size
            :> (-> deref design/bead-sizes)]
-   ; :width width
-   ; :height height
    (m/Container .width width .height height .decoration (m/BoxDecoration))
    (m/Container .margin (m/EdgeInsets.symmetric .horizontal 1.0))
    .decoration
