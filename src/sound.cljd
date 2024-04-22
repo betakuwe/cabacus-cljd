@@ -12,30 +12,22 @@
            (.setSource (ap/AssetSource (str "sound/bead-" % ".wav"))))
         (range num-tracks)))
 
-(defn init-async
-  "Preload the bead audioplayers."
-  []
+(defn init-async "Preload the bead audioplayers." []
   (Future.wait (map #(.stop ^ap/AudioPlayer %) audioplayers)))
 
-(defn- play-index-async
-  ([i]
-   (future (let [ap (audioplayers i)]
-             (await (.stop ^ap/AudioPlayer ap))
-             (.resume ^ap/AudioPlayer ap))))
-  ([& is]
-   (future (doseq [i is]
-             (play-index-async i)
-             (await (Future.delayed (dc/Duration .milliseconds 4)))))))
+(defn- play-index-async [i] (future (let [ap (audioplayers i)]
+                                      (await (.stop ^ap/AudioPlayer ap))
+                                      (.resume ^ap/AudioPlayer ap))))
 
 (def ^:private !random-indices
   (atom (->> (range num-tracks) (partial shuffle) repeatedly (apply concat))))
 
-(defn play-async
-  "Plays a single random bead sound or n random bead sounds."
+(defn play-async "Plays a single random bead sound or n random bead sounds."
   ([]
    (play-index-async (first @!random-indices))
    (swap! !random-indices (partial drop 1)))
   ([n]
-   (apply play-index-async (take n @!random-indices))
+   (future (doseq [i (take n @!random-indices)]
+             (play-index-async i)
+             (await (Future.delayed (dc/Duration .milliseconds 4)))))
    (swap! !random-indices (partial drop n))))
-
